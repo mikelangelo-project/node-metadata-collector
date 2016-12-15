@@ -40,3 +40,14 @@ The resulting JSON will look like:
 ```
 {jobid: {nodename1: {env: {}, packages: {} .......}, nodename2: {env: {}, packages: {} .......}}}
 ```
+
+## License
+
+node-metadata-collector is distributed under the Apache License 2.0 license.
+
+## Acknowledgements
+
+This project  has been conducted within the RIA [MIKELANGELO
+project](https://www.mikelangelo-project.eu) (no.  645402), started in January
+2015, and co-funded by the European Commission under the H2020-ICT- 07-2014:
+Advanced Cloud Infrastructures and Services programme.
