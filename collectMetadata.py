@@ -37,15 +37,16 @@ class Collector(object):
     def __init__(self):
         """Init of this class."""
         self.logger = self.get_logger()
+        self.hostname = self.collect_hostname()
 
     def get_logger(self):
         """Setup the global logger."""
         # log setup
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         # create console handler with a higher log level
         ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
+        ch.setLevel(logging.INFO)
         # create formatter and add it to the handlers
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -106,6 +107,7 @@ class Collector(object):
 
     def get_mpi_version(self):
         """Get the mpi version and path."""
+        self.logger.info('getting mpi version.')
         out = {}
         out['path'] = subprocess.check_output(["which", "mpirun"])
         tmp = subprocess.check_output(
@@ -120,6 +122,99 @@ class Collector(object):
         git = git.bake("-C", path)
         git_out = git.describe('--always')
         return git_out.rstrip()
+
+    def get_users(self):
+        """Get all users and their groups."""
+        self.logger.info('getting user info.')
+        import pwd
+        import grp
+        return_dict = {}
+        groups_list = grp.getgrall()
+
+        for user in pwd.getpwall():
+            user_group_list = []
+            # skip all user accounts that are not allowed/capable to login
+            if ('/bin/false' not in user[6] and
+                    '/usr/sbin/nologin' not in user[6] and
+                    '/home' in user[5]):
+                user_group_list.append(grp.getgrgid(user[3])[0])
+                for group in groups_list:
+                    if user[0] in group[3]:
+                        user_group_list.append(group[0])
+                if len(user_group_list) > 0:
+                    return_dict[user[0]] = user_group_list
+        return return_dict
+
+    def get_network(self):
+        """Get all network interface informations."""
+        self.logger.info('getting network info.')
+        import netifaces
+        return_dict = {}
+        return_dict['ip_v4_gateways'] = netifaces.gateways()
+        link_list = netifaces.interfaces()
+        for link in link_list:
+            return_dict[link] = netifaces.ifaddresses(link)
+
+        return return_dict
+
+    def get_vms(self):
+        """Get VMs active / not active."""
+        self.logger.info('getting vm(s) info.')
+        import libvirt
+        import sys
+
+        conn = libvirt.open('qemu:///system')
+        if conn is None:
+            self.logger.warning(
+                'Error in libvirt qemu connection:\n {}'.format(sys.stderr)
+            )
+            return
+
+        domain_names = conn.listDefinedDomains()
+
+        if len(domain_names) <= 0:
+            return ['no_vms']
+        domain_ids = conn.listDomainsID()
+        if domain_ids is None:
+            self.logger.warning(
+                'Error in libvirt domain collection:\n {}'.format(sys.stderr)
+            )
+            return
+        return_dict = {}
+        return_dict['inactive_vms'] = domain_names
+        return_dict['active_vms'] = {}
+        if len(domain_ids) >= 0:
+            for domainID in domain_ids:
+                domain = conn.lookupByID(domainID)
+                return_dict['active_vms'][domain.name()] = {
+                    'os_type': domain.OSType(),
+                    'id': domain.ID(),
+                    'infos': {
+                        'state': domain.info()[0],
+                        'max_memory': domain.info()[1],
+                        'memory': domain.info()[2],
+                        'nb_virt_cpu': domain.info()[3],
+                        'cpu_time': domain.info()[4]
+                    }
+
+                }
+
+        conn.close()
+        return return_dict
+
+    def get_mounts(self):
+        """Get Physical disc / nfs mounts."""
+        self.logger.info('getting mounts.')
+        import psutil
+        partitions_disks = psutil.disk_partitions(all=False)
+        partitions_all = psutil.disk_partitions(all=True)
+
+        for disc in partitions_all:
+            for fild in disc:
+                if 'nfs' in fild:
+                    partitions_disks.append(disc)
+                    break
+        return partitions_disks
 
 
 def get_metatdata(coll):
