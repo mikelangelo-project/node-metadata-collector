@@ -23,6 +23,7 @@
 
 import click
 from collectMetadata import Collector
+from mergeMetadata import MergeMetadata
 from database import JsonConnector
 
 
@@ -53,7 +54,7 @@ def _inventory_show(je, show, list_keys, host):
         print('Try --help to see help')
 
 
-def _inventory_collect(je, out_path):
+def _inventory_collect(je, collect, out_path):
 
     host_informations = Collector()
     host = host_informations.hostname
@@ -73,9 +74,19 @@ def _inventory_collect(je, out_path):
         je.dump_dict(je.dict_server, je.json_file)
 
 
-def _inventory_mege(je, merge_path):
+def _inventory_mege(je, merge, out_path):
 
-    raise(NotImplementedError)
+    if not merge:
+        print('please provide input path -m [path]')
+        exit(1)
+
+    mm = MergeMetadata()
+    mm.read_files(merge)
+    mm.merge_files()
+    if out_path:
+        mm.save_new_json(out_path)
+    else:
+        mm.save_new_json('data/merge.json')
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -113,25 +124,26 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.option(
     '-m',
     '--merge',
-    default=False,
-    is_flag=True,
+    type=click.Path(),
     help='merge multiple jsons into one inventory')
-def main(host, dbfile, list_keys, show, collect, merge):
+@click.option(
+    '-o',
+    '--out_path',
+    type=click.STRING,
+    help='path to output file.')
+def main(host, dbfile, list_keys, show, collect, merge, out_path):
     """Tool to explore meta data files."""
     je = JsonConnector(dbfile)
-
-    out_path = False
 
     if show or list_keys or host:
         # call show stuff
         _inventory_show(je, show, list_keys, host)
     elif collect:
         # collect
-        _inventory_collect(je, out_path)
+        _inventory_collect(je, collect, out_path)
     elif merge:
         # merge stuff
-        # _inventory_mege(je, merge_path)
-        raise(NotImplementedError)
+        _inventory_mege(je, merge, out_path)
     else:
         # assume miss use of the tool
         print('Try --help to see help')

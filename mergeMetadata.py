@@ -28,28 +28,65 @@ import click
 import logging
 
 
-def dump_dict(dict, json_file_path):
-    """Dump the given dict to a json file."""
-    with open(json_file_path, 'w') as fp:
-        json.dump(dict, fp)
+class MergeMetadata(object):
+    """Class to interact with the json file."""
 
+    def __init__(self):
+        """Class init."""
+        self.logger = self._get_logger()
+        self.json_dicts = []
 
-def get_logger():
-    """Setup the global logger."""
-    # log setup
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    # add the handlers to the logger
-    logger.addHandler(ch)
-    logger.debug('Logger setup complete. Start Program ... ')
-    return logger
+    def _get_logger(self):
+        """Setup the global logger."""
+        logger = logging.getLogger(__name__)
+
+        logger.setLevel(logging.INFO)
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(ch)
+        logger.debug('Logger setup complete. Start Program ... ')
+        return logger
+
+    def read_files(self, input_path):
+        """Read files from disc out input_path."""
+        for file in os.listdir(input_path):
+            self.logger.info('Reading %s' % file)
+            # found a json file
+            path_to_node_json = str('%s/%s' % (input_path, file))
+
+            # test if exist
+            if os.path.exists(path_to_node_json) and file.endswith('.json'):
+                # read the content
+                with open(path_to_node_json, 'r') as json_file:
+                    tmp_dict = json.load(json_file)
+                    self.json_dicts.append(tmp_dict)
+
+    def merge_files_with_new_root(self, name):
+        """Merge files with name as new root."""
+        self.merge_dict = {name: {}}
+        for new_dict in self.json_dicts:
+            self.merge_dict[name].update(new_dict)
+
+    def merge_files(self):
+        """Merge files in to on dictionary."""
+        self.merge_dict = {}
+        for new_dict in self.json_dicts:
+            self.merge_dict.update(new_dict)
+
+    def save_new_json(self, out_file):
+        """Save merged dictionary as JSON to out_file."""
+        self._dump_dict(self.merge_dict, out_file)
+
+    def _dump_dict(self, dict, json_file_path):
+        """Dump the given dict to a json file."""
+        with open(json_file_path, 'w') as fp:
+            json.dump(dict, fp, sort_keys=True, indent=4)
 
 
 @click.command()
@@ -78,23 +115,10 @@ def main(input_path, name, out_file):
     --input_path    path to the json files
     --out_file      the file where the new document is written to
     """
-    merge_dict = {name: {}}  # setup
-    logger = get_logger()
-    # iterate over path
-    for file in os.listdir(input_path):
-        logger.info('Reading %s' % file)
-        # found a json file
-        path_to_node_json = str('%s/%s' % (input_path, file))
-
-        # test if exist
-        if os.path.exists(path_to_node_json) and file.endswith('.json'):
-            # read the content
-            with open(path_to_node_json, 'r') as json_file:
-                tmp_dict = json.load(json_file)
-                merge_dict[name].update(tmp_dict)
-
-    # write the merged json to file
-    dump_dict(merge_dict, out_file)
+    mm = MergeMetadata()
+    mm.read_files(input_path)
+    mm.merge_files_with_new_root(name)
+    mm.save_new_json(out_file)
 
 
 if __name__ == '__main__':
