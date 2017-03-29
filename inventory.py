@@ -64,6 +64,7 @@ def _inventory_collect(je, out_path):
     update_dict[host]['mounts'] = host_informations.get_mounts()
     update_dict[host]['storage'] = {"get_info": []}
     update_dict[host]['comment'] = ""
+    update_dict[host]['collection_time'] = host_informations.get_date()
 
     if out_path:
         je.dump_dict(update_dict, out_path)

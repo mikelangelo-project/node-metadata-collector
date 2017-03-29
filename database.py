@@ -99,11 +99,11 @@ class JsonConnector(object):
                 sort_keys=True,
                 indent=4
             )
+            print(print_string)
         except (KeyError):
             self.logger.error(
                 "Server informations not found for: {}".format(hostname)
             )
-        print(print_string)
 
     def get_host_keys(self, hostname):
         """Get all keys stored for a host."""
@@ -153,7 +153,8 @@ class JsonConnector(object):
                 "storage": {
                     "get_info": []
                 },
-                "comment": ""
+                "comment": "",
+                "collection_time": ""
             }
         }
         return return_dict

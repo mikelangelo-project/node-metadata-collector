@@ -102,8 +102,16 @@ class Collector(object):
 
     def get_date(self):
         """Get the current date time."""
+        import time
         self.logger.info('getting the time.')
-        return str(datetime.datetime.now())
+        result_dict = {}
+        date_dict = {'date': str(datetime.datetime.now())}
+        ts_dict = {'time_stamp': time.time()}
+
+        result_dict.update(date_dict)
+        result_dict.update(ts_dict)
+
+        return result_dict
 
     def get_mpi_version(self):
         """Get the mpi version and path."""
