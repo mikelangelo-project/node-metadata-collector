@@ -114,7 +114,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
     '-s',
     '--show',
     type=click.STRING,
-    help='Show contend of key')
+    help='Show content of key')
 @click.option(
     '-c',
     '--collect',
@@ -125,12 +125,12 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
     '-m',
     '--merge',
     type=click.Path(),
-    help='merge multiple jsons into one inventory')
+    help='Merge multiple JSON files in PATH into one inventory')
 @click.option(
     '-o',
     '--out_path',
     type=click.STRING,
-    help='path to output file.')
+    help='Path to output file.')
 def main(host, dbfile, list_keys, show, collect, merge, out_path):
     """Tool to explore meta data files."""
     je = JsonConnector(dbfile)

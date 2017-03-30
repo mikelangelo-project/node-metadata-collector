@@ -81,7 +81,8 @@ class JsonConnector(object):
                     sort_keys=True,
                     indent=4)
                 )
-                exit(1)
+                file.close()
+                return self._get_dict_from_file()
         except (ValueError) as e:
             self.logger.error(
                 'something is wrong with the json file.\n{}'.format(e))
@@ -181,5 +182,16 @@ class JsonConnector(object):
 
     def dump_dict(self, dict_to_write, json_file_path):
         """Dump the given dict to a json file."""
+        db_pardir = os.path.abspath(os.path.join(
+            json_file_path,
+            os.pardir)
+        )
+        if not os.path.exists(db_pardir):
+            self.logger.warning(
+                'Parent directory {} dose not exist.'.format(db_pardir)
+            )
+            self.logger.info('creating {}'.format(db_pardir))
+            os.makedirs(db_pardir)
+
         with open(json_file_path, 'w') as fp:
             json.dump(dict_to_write, fp, sort_keys=True, indent=4)

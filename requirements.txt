@@ -10,3 +10,5 @@ py-cpuinfo
 sh
 logging
 click
+netifaces
+libvirt-python
