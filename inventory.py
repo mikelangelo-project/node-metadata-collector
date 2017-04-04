@@ -71,7 +71,7 @@ def _inventory_collect(je, collect, out_path):
         je.dump_dict(update_dict, out_path)
     else:
         je.add_host(update_dict)
-        je.dump_dict(je.dict_server, je.json_file)
+        je.save_dict()
 
 
 def _inventory_mege(je, merge, out_path):

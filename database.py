@@ -52,44 +52,45 @@ class JsonConnector(object):
         logger.debug('Logger setup complete. Start Program ... ')
         return logger
 
+    def _get_default_dict(self):
+        return_dict = {
+            "structure": {
+                "network": {},
+                "vms": [],
+                "users": [],
+                "mounts": [],
+                "storage": {
+                    "get_info": []
+                },
+                "comment": "",
+                "collection_time": ""
+            }
+        }
+        return return_dict
+
     def _get_dict_from_file(self):
         try:
             file = open(self.json_file)
             return_dict = json.load(file)
             file.close()
+
         except (IOError):
             self.logger.warning(
                 'No database file found please check path: {}'.format(
                     self.json_file))
-            db_pardir = os.path.abspath(os.path.join(
-                self.json_file,
-                os.pardir)
-            )
-            # create parent directory if not exist
-            if not os.path.exists(db_pardir):
-                self.logger.warning(
-                    'Parent directory {} dose not exist.'.format(db_pardir)
-                )
-                self.logger.info('creating {}'.format(db_pardir))
-                os.makedirs(db_pardir)
-            # create new db
             self.logger.info('creating new db file: {}'.format(self.json_file))
-            with open(self.json_file, 'wr') as file:
-                self.logger.debug(self._get_default_dict())
-                file.write(json.dumps(
-                    self._get_default_dict(),
-                    sort_keys=True,
-                    indent=4)
-                )
-                file.close()
-                return self._get_dict_from_file()
+            self.dump_dict(self._get_default_dict(), self.json_file)
+            return self._get_dict_from_file()
+
         except (ValueError) as e:
             self.logger.error(
                 'something is wrong with the json file.\n{}'.format(e))
             exit(1)
+
         self.logger.debug(
             json.dumps(return_dict, sort_keys=True, indent=4)
         )
+
         return return_dict
 
     def get_host_infos(self, hostname):
@@ -144,22 +145,6 @@ class JsonConnector(object):
         """Add a new host to the store."""
         self.dict_server.update(update_dict)
 
-    def _get_default_dict(self):
-        return_dict = {
-            "structure": {
-                "network": {},
-                "vms": [],
-                "users": [],
-                "mounts": [],
-                "storage": {
-                    "get_info": []
-                },
-                "comment": "",
-                "collection_time": ""
-            }
-        }
-        return return_dict
-
     def get_all_host_keys(self, show):
         """Show one key in all hosts (eg. show all users)."""
         search_key = show
@@ -195,3 +180,8 @@ class JsonConnector(object):
 
         with open(json_file_path, 'w') as fp:
             json.dump(dict_to_write, fp, sort_keys=True, indent=4)
+            fp.close()
+
+    def save_dict(self):
+        """Save the stored dictionary."""
+        self.dump_dict(self.dict_server, self.json_file)
