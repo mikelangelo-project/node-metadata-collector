@@ -10,9 +10,9 @@ and can be used to collect and document performance experiments.
 * [Prerequisites](#prerequisites)
 * [Installing](#installing)
 * [Example](#example)
-  * [Collect New Data](collect-new-data)
-  * [Getting Information](getting-information)
-  * [Merging Data](merging-data)
+  * [Collect New Data](#collect-new-data)
+  * [Getting Information](#getting-information)
+  * [Merging Data](#merging-data)
 * [License](#license)
 * [Acknowledgements](#acknowledgements)
 
